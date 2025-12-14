@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flower of Life - Harmonic Waves</title>
+    <title>Flower of Life</title>
     <style>
         * {
             margin: 0;
@@ -25,11 +25,22 @@
             font-family: system-ui, -apple-system, sans-serif;
             font-size: 14px;
             pointer-events: none;
+            line-height: 1.6;
+        }
+        #mode {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 16px;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div id="info">Drag to rotate • Scroll to zoom • View from above for Flower of Life</div>
+    <div id="mode">Flower of Life</div>
+    <div id="info">Drag to rotate • Scroll to zoom<br>Press Space or T to toggle pattern</div>
 
     <script type="importmap">
     {
@@ -46,15 +57,32 @@
 
         // Configuration
         const CONFIG = {
+            // Shared
+            backgroundColor: 0x2a2525,
+            lineColor: 0xf5f5f0,
+
+            // Flower of Life
+            flowerRings: 3,
+            circleRadius: 1.5,
+            circleSegments: 64,
+            pulseSpeed: 0.5,
+            pulseAmount: 0.05,
+
+            // Harmonic Waves
             numHarmonics: 16,
             waveSegments: 256,
             waveWidth: 10,
             verticalSpacing: 0.6,
             baseAmplitude: 1.0,
-            animationSpeed: 0.3,
-            backgroundColor: 0x2a2525,
-            lineColor: 0xf5f5f0
+            waveAnimationSpeed: 0.3
         };
+
+        // Pattern state
+        const PATTERNS = {
+            FLOWER: 'flower',
+            WAVES: 'waves'
+        };
+        let currentPattern = PATTERNS.FLOWER;
 
         // Scene setup
         const scene = new THREE.Scene();
@@ -67,8 +95,6 @@
             0.1,
             1000
         );
-        camera.position.set(8, 6, 12);
-        camera.lookAt(0, CONFIG.numHarmonics * CONFIG.verticalSpacing / 2, 0);
 
         // Renderer
         const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -80,23 +106,108 @@
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
-        controls.target.set(0, CONFIG.numHarmonics * CONFIG.verticalSpacing / 2, 0);
-        controls.update();
 
-        // Store wave data for animation
+        // Groups for each pattern
+        const flowerGroup = new THREE.Group();
+        const wavesGroup = new THREE.Group();
+        scene.add(flowerGroup);
+        scene.add(wavesGroup);
+
+        // =====================
+        // FLOWER OF LIFE
+        // =====================
+
+        // Generate hexagonal grid positions for Flower of Life
+        function getFlowerPositions(rings, radius) {
+            const positions = [];
+
+            // Center circle
+            positions.push({ x: 0, y: 0 });
+
+            // For the Flower of Life, circles are placed at distance = radius
+            // Using axial coordinates for hexagonal grid
+            for (let ring = 1; ring <= rings; ring++) {
+                // Each ring has 6 * ring circles
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i * Math.PI) / 3; // 60 degree intervals
+
+                    // Walk along the edge of the hexagon
+                    for (let j = 0; j < ring; j++) {
+                        const nextAngle = ((i + 2) * Math.PI) / 3;
+
+                        // Start position for this edge
+                        const startX = ring * radius * Math.cos(angle);
+                        const startY = ring * radius * Math.sin(angle);
+
+                        // Direction along edge
+                        const dx = radius * Math.cos(nextAngle);
+                        const dy = radius * Math.sin(nextAngle);
+
+                        const x = startX + j * dx;
+                        const y = startY + j * dy;
+
+                        positions.push({ x, y });
+                    }
+                }
+            }
+
+            return positions;
+        }
+
+        // Create a single circle as a line
+        function createCircle(centerX, centerY, radius, segments) {
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array((segments + 1) * 3);
+
+            for (let i = 0; i <= segments; i++) {
+                const angle = (i / segments) * Math.PI * 2;
+                positions[i * 3] = centerX + radius * Math.cos(angle);
+                positions[i * 3 + 1] = centerY + radius * Math.sin(angle);
+                positions[i * 3 + 2] = 0;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            const material = new THREE.LineBasicMaterial({
+                color: CONFIG.lineColor,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            return new THREE.Line(geometry, material);
+        }
+
+        // Build the Flower of Life pattern
+        function buildFlowerOfLife() {
+            const positions = getFlowerPositions(CONFIG.flowerRings, CONFIG.circleRadius);
+
+            for (const pos of positions) {
+                const circle = createCircle(
+                    pos.x,
+                    pos.y,
+                    CONFIG.circleRadius,
+                    CONFIG.circleSegments
+                );
+                flowerGroup.add(circle);
+            }
+        }
+
+        buildFlowerOfLife();
+
+        // =====================
+        // HARMONIC WAVES
+        // =====================
+
         const waves = [];
 
-        // Create a single harmonic wave
         function createWave(harmonic) {
             const geometry = new THREE.BufferGeometry();
             const positions = new Float32Array(CONFIG.waveSegments * 3);
 
-            // Initial positions
             updateWaveGeometry(positions, harmonic, 0);
 
             geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-            // Line material with slight opacity variation based on harmonic
             const opacity = 1.0 - (harmonic / CONFIG.numHarmonics) * 0.3;
             const material = new THREE.LineBasicMaterial({
                 color: CONFIG.lineColor,
@@ -105,24 +216,18 @@
             });
 
             const line = new THREE.Line(geometry, material);
-
-            // Position vertically based on harmonic number
             line.position.y = harmonic * CONFIG.verticalSpacing;
 
             return { line, geometry, positions, harmonic };
         }
 
-        // Update wave geometry for animation
         function updateWaveGeometry(positions, harmonic, time) {
             const amplitude = CONFIG.baseAmplitude / Math.sqrt(harmonic);
 
             for (let i = 0; i < CONFIG.waveSegments; i++) {
                 const t = i / (CONFIG.waveSegments - 1);
                 const x = (t - 0.5) * CONFIG.waveWidth;
-
-                // Wave equation with phase animation
-                // Higher harmonics move faster (multiply time by harmonic)
-                const phase = time * CONFIG.animationSpeed * harmonic;
+                const phase = time * CONFIG.waveAnimationSpeed * harmonic;
                 const z = amplitude * Math.sin(harmonic * t * Math.PI * 2 + phase);
 
                 positions[i * 3] = x;
@@ -131,21 +236,67 @@
             }
         }
 
-        // Create all harmonic waves
+        // Build harmonic waves
         for (let h = 1; h <= CONFIG.numHarmonics; h++) {
             const wave = createWave(h);
             waves.push(wave);
-            scene.add(wave.line);
+            wavesGroup.add(wave.line);
         }
 
-        // Handle window resize
+        // =====================
+        // PATTERN SWITCHING
+        // =====================
+
+        function setCamera(pattern) {
+            if (pattern === PATTERNS.FLOWER) {
+                camera.position.set(0, 0, 12);
+                controls.target.set(0, 0, 0);
+            } else {
+                camera.position.set(8, 6, 12);
+                controls.target.set(0, CONFIG.numHarmonics * CONFIG.verticalSpacing / 2, 0);
+            }
+            controls.update();
+        }
+
+        function switchPattern(pattern) {
+            currentPattern = pattern;
+            flowerGroup.visible = (pattern === PATTERNS.FLOWER);
+            wavesGroup.visible = (pattern === PATTERNS.WAVES);
+
+            document.getElementById('mode').textContent =
+                pattern === PATTERNS.FLOWER ? 'Flower of Life' : 'Harmonic Waves';
+
+            setCamera(pattern);
+        }
+
+        // Initialize
+        switchPattern(PATTERNS.FLOWER);
+
+        // Keyboard toggle
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'KeyT') {
+                e.preventDefault();
+                const newPattern = currentPattern === PATTERNS.FLOWER
+                    ? PATTERNS.WAVES
+                    : PATTERNS.FLOWER;
+                switchPattern(newPattern);
+            }
+        });
+
+        // =====================
+        // RESIZE HANDLER
+        // =====================
+
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Animation loop
+        // =====================
+        // ANIMATION LOOP
+        // =====================
+
         const clock = new THREE.Clock();
 
         function animate() {
@@ -153,10 +304,18 @@
 
             const time = clock.getElapsedTime();
 
-            // Update each wave
-            for (const wave of waves) {
-                updateWaveGeometry(wave.positions, wave.harmonic, time);
-                wave.geometry.attributes.position.needsUpdate = true;
+            // Animate Flower of Life - breathing pulse
+            if (currentPattern === PATTERNS.FLOWER) {
+                const pulseScale = 1 + Math.sin(time * CONFIG.pulseSpeed) * CONFIG.pulseAmount;
+                flowerGroup.scale.set(pulseScale, pulseScale, 1);
+            }
+
+            // Animate Harmonic Waves
+            if (currentPattern === PATTERNS.WAVES) {
+                for (const wave of waves) {
+                    updateWaveGeometry(wave.positions, wave.harmonic, time);
+                    wave.geometry.attributes.position.needsUpdate = true;
+                }
             }
 
             controls.update();
