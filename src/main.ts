@@ -20,6 +20,7 @@ import {
   type AppState,
   type PatternGroups,
 } from "./controls";
+import { initInteraction, updateHover, clearHover } from "./interaction";
 
 // Application state
 const state: AppState = {
@@ -53,6 +54,7 @@ const groups: PatternGroups = {
 setupResizeHandler();
 setupKeyboardControls(state, groups, camera, controls);
 setupPauseButton(state);
+initInteraction();
 
 // Initialize to first pattern
 switchPattern(PATTERNS.FLOWER_V2, state, groups, camera, controls);
@@ -79,6 +81,9 @@ function animate(): void {
 
   if (state.currentPattern === PATTERNS.FLOWER_V2) {
     animateFlowerOfLifeV2(flowerV2Group, animationTime);
+    updateHover(camera, flowerV2Group);
+  } else {
+    clearHover();
   }
 
   if (state.currentPattern === PATTERNS.WAVES) {

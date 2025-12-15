@@ -22,6 +22,7 @@ export const CONFIG = {
   flowerV2Rings: 3,
   flowerV2DrawDuration: 1,
   flowerV2PauseDuration: 5,
+  flowerV2HoverColor: 0xffaa00,
 
   // 3D Flower of Life (Spheres)
   sphere3dRings: 2,
