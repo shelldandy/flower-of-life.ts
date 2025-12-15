@@ -29,6 +29,27 @@ function createCircle(
   return new Line(geometry, material)
 }
 
+function addSurroundingCircles(
+  group: Group,
+  centerX: number,
+  centerY: number,
+  radius: number
+): void {
+  // Add 6 circles around the center point at 60° intervals
+  for (let i = 0; i < 6; i++) {
+    const angle = (i * Math.PI) / 3 // 0, 60°, 120°, 180°, 240°, 300°
+    const circleCenterX = centerX + radius * Math.cos(angle)
+    const circleCenterY = centerY + radius * Math.sin(angle)
+
+    // Start angle: each circle starts from where it intersects the previous circle
+    // The intersection with the previous circle is at angle + 120°
+    const startAngle = angle + (2 * Math.PI) / 3
+
+    const circle = createCircle(circleCenterX, circleCenterY, radius, CONFIG.circleSegments, startAngle)
+    group.add(circle)
+  }
+}
+
 export function createFlowerOfLifeV2(): Group {
   const group = new Group()
   const radius = CONFIG.circleRadius
@@ -37,21 +58,8 @@ export function createFlowerOfLifeV2(): Group {
   const circle1 = createCircle(0, 0, radius, CONFIG.circleSegments)
   group.add(circle1)
 
-  // Circles 2-7: 6 circles around the center, each centered on circle 1's circumference
-  // They are placed at 60° intervals (0°, 60°, 120°, 180°, 240°, 300°)
-  // Each circle starts drawing from the intersection point with the previous circle
-  for (let i = 0; i < 6; i++) {
-    const angle = (i * Math.PI) / 3 // 0, 60°, 120°, 180°, 240°, 300°
-    const centerX = radius * Math.cos(angle)
-    const centerY = radius * Math.sin(angle)
-
-    // Start angle: each circle starts from where it intersects the previous circle
-    // The intersection with the previous circle (or with circle 1 for the first) is at angle + 120°
-    const startAngle = angle + (2 * Math.PI) / 3
-
-    const circle = createCircle(centerX, centerY, radius, CONFIG.circleSegments, startAngle)
-    group.add(circle)
-  }
+  // Circles 2-7: 6 circles around the center
+  addSurroundingCircles(group, 0, 0, radius)
 
   return group
 }
