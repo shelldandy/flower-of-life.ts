@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import * as THREE from 'three'
+import { Group, Line, BufferGeometry } from 'three'
 
 beforeEach(() => {
   vi.stubGlobal('document', {
@@ -20,7 +20,7 @@ describe('createHarmonicWaves', () => {
 
     expect(result).toHaveProperty('group')
     expect(result).toHaveProperty('waves')
-    expect(result.group).toBeInstanceOf(THREE.Group)
+    expect(result.group).toBeInstanceOf(Group)
     expect(Array.isArray(result.waves)).toBe(true)
   })
 
@@ -42,8 +42,8 @@ describe('createHarmonicWaves', () => {
       expect(wave).toHaveProperty('geometry')
       expect(wave).toHaveProperty('positions')
       expect(wave).toHaveProperty('harmonic')
-      expect(wave.line).toBeInstanceOf(THREE.Line)
-      expect(wave.geometry).toBeInstanceOf(THREE.BufferGeometry)
+      expect(wave.line).toBeInstanceOf(Line)
+      expect(wave.geometry).toBeInstanceOf(BufferGeometry)
       expect(wave.positions).toBeInstanceOf(Float32Array)
       expect(wave.harmonic).toBeTypeOf('number')
     }

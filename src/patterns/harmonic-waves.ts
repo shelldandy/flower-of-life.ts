@@ -1,9 +1,9 @@
-import * as THREE from 'three'
+import { BufferGeometry, BufferAttribute, LineBasicMaterial, Line, Group } from 'three'
 import { CONFIG } from '../config'
 
 export interface WaveData {
-  line: THREE.Line
-  geometry: THREE.BufferGeometry
+  line: Line
+  geometry: BufferGeometry
   positions: Float32Array
   harmonic: number
 }
@@ -24,33 +24,33 @@ function updateWaveGeometry(positions: Float32Array, harmonic: number, time: num
 }
 
 function createWave(harmonic: number): WaveData {
-  const geometry = new THREE.BufferGeometry()
+  const geometry = new BufferGeometry()
   const positions = new Float32Array(CONFIG.waveSegments * 3)
 
   updateWaveGeometry(positions, harmonic, 0)
 
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+  geometry.setAttribute('position', new BufferAttribute(positions, 3))
 
   const opacity = 1.0 - (harmonic / CONFIG.numHarmonics) * 0.3
-  const material = new THREE.LineBasicMaterial({
+  const material = new LineBasicMaterial({
     color: CONFIG.lineColor,
     transparent: true,
     opacity: opacity
   })
 
-  const line = new THREE.Line(geometry, material)
+  const line = new Line(geometry, material)
   line.position.y = harmonic * CONFIG.verticalSpacing
 
   return { line, geometry, positions, harmonic }
 }
 
 export interface HarmonicWavesResult {
-  group: THREE.Group
+  group: Group
   waves: WaveData[]
 }
 
 export function createHarmonicWaves(): HarmonicWavesResult {
-  const group = new THREE.Group()
+  const group = new Group()
   const waves: WaveData[] = []
 
   for (let h = 1; h <= CONFIG.numHarmonics; h++) {

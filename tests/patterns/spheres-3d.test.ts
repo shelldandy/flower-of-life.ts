@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import * as THREE from 'three'
+import { Group, Mesh, MeshStandardMaterial, MeshBasicMaterial, MeshPhysicalMaterial } from 'three'
 
 beforeEach(() => {
   vi.stubGlobal('document', {
@@ -17,7 +17,7 @@ describe('createSpheres3D', () => {
   it('creates a THREE.Group', async () => {
     const { createSpheres3D } = await import('../../src/patterns/spheres-3d')
     const group = createSpheres3D('solid')
-    expect(group).toBeInstanceOf(THREE.Group)
+    expect(group).toBeInstanceOf(Group)
   })
 
   it('creates Mesh objects', async () => {
@@ -26,7 +26,7 @@ describe('createSpheres3D', () => {
 
     expect(group.children.length).toBeGreaterThan(0)
     for (const child of group.children) {
-      expect(child).toBeInstanceOf(THREE.Mesh)
+      expect(child).toBeInstanceOf(Mesh)
     }
   })
 
@@ -49,13 +49,13 @@ describe('createSpheres3D', () => {
     const wireframeGroup = createSpheres3D('wireframe')
     const glassGroup = createSpheres3D('glass')
 
-    const solidMesh = solidGroup.children[0] as THREE.Mesh
-    const wireframeMesh = wireframeGroup.children[0] as THREE.Mesh
-    const glassMesh = glassGroup.children[0] as THREE.Mesh
+    const solidMesh = solidGroup.children[0] as Mesh
+    const wireframeMesh = wireframeGroup.children[0] as Mesh
+    const glassMesh = glassGroup.children[0] as Mesh
 
-    expect(solidMesh.material).toBeInstanceOf(THREE.MeshStandardMaterial)
-    expect(wireframeMesh.material).toBeInstanceOf(THREE.MeshBasicMaterial)
-    expect(glassMesh.material).toBeInstanceOf(THREE.MeshPhysicalMaterial)
+    expect(solidMesh.material).toBeInstanceOf(MeshStandardMaterial)
+    expect(wireframeMesh.material).toBeInstanceOf(MeshBasicMaterial)
+    expect(glassMesh.material).toBeInstanceOf(MeshPhysicalMaterial)
   })
 })
 
@@ -71,8 +71,8 @@ describe('rebuildSpheres3D', () => {
     expect(group.children).toHaveLength(initialCount)
 
     // But with different material type
-    const mesh = group.children[0] as THREE.Mesh
-    expect(mesh.material).toBeInstanceOf(THREE.MeshBasicMaterial)
+    const mesh = group.children[0] as Mesh
+    expect(mesh.material).toBeInstanceOf(MeshBasicMaterial)
   })
 })
 

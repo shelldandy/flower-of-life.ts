@@ -1,4 +1,12 @@
-import * as THREE from 'three'
+import {
+  SphereGeometry,
+  MeshBasicMaterial,
+  MeshPhysicalMaterial,
+  MeshStandardMaterial,
+  Mesh,
+  Group,
+} from 'three'
+import type { Material } from 'three'
 import { CONFIG, type SphereStyle } from '../config'
 import { get3DFlowerPositions } from '../utils/geometry'
 
@@ -8,13 +16,13 @@ function createSphere(
   z: number,
   radius: number,
   style: SphereStyle
-): THREE.Mesh {
-  const geometry = new THREE.SphereGeometry(radius, CONFIG.sphereSegments, CONFIG.sphereSegments)
-  let material: THREE.Material
+): Mesh {
+  const geometry = new SphereGeometry(radius, CONFIG.sphereSegments, CONFIG.sphereSegments)
+  let material: Material
 
   switch (style) {
     case 'wireframe':
-      material = new THREE.MeshBasicMaterial({
+      material = new MeshBasicMaterial({
         color: CONFIG.lineColor,
         wireframe: true,
         transparent: true,
@@ -22,7 +30,7 @@ function createSphere(
       })
       break
     case 'glass':
-      material = new THREE.MeshPhysicalMaterial({
+      material = new MeshPhysicalMaterial({
         color: CONFIG.lineColor,
         transparent: true,
         opacity: 0.3,
@@ -34,20 +42,20 @@ function createSphere(
       break
     case 'solid':
     default:
-      material = new THREE.MeshStandardMaterial({
+      material = new MeshStandardMaterial({
         color: CONFIG.lineColor,
         roughness: 0.4,
         metalness: 0.2
       })
   }
 
-  const sphere = new THREE.Mesh(geometry, material)
+  const sphere = new Mesh(geometry, material)
   sphere.position.set(x, y, z)
   return sphere
 }
 
-export function createSpheres3D(style: SphereStyle): THREE.Group {
-  const group = new THREE.Group()
+export function createSpheres3D(style: SphereStyle): Group {
+  const group = new Group()
 
   const positions = get3DFlowerPositions(
     CONFIG.sphere3dRings,
@@ -64,10 +72,10 @@ export function createSpheres3D(style: SphereStyle): THREE.Group {
   return group
 }
 
-export function rebuildSpheres3D(group: THREE.Group, style: SphereStyle): void {
+export function rebuildSpheres3D(group: Group, style: SphereStyle): void {
   // Clear existing spheres
   while (group.children.length > 0) {
-    const child = group.children[0] as THREE.Mesh
+    const child = group.children[0] as Mesh
     child.geometry.dispose()
     if (Array.isArray(child.material)) {
       child.material.forEach((m) => m.dispose())
@@ -90,6 +98,6 @@ export function rebuildSpheres3D(group: THREE.Group, style: SphereStyle): void {
   }
 }
 
-export function animateSpheres3D(group: THREE.Group, time: number): void {
+export function animateSpheres3D(group: Group, time: number): void {
   group.rotation.y = time * CONFIG.sphere3dRotationSpeed * 0.5
 }

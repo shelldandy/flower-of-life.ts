@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import { BufferGeometry, BufferAttribute, LineBasicMaterial, Line, Group } from 'three'
 import { CONFIG } from '../config'
 import { getFlowerPositions } from '../utils/geometry'
 
@@ -7,8 +7,8 @@ function createCircle(
   centerY: number,
   radius: number,
   segments: number
-): THREE.Line {
-  const geometry = new THREE.BufferGeometry()
+): Line {
+  const geometry = new BufferGeometry()
   const positions = new Float32Array((segments + 1) * 3)
 
   for (let i = 0; i <= segments; i++) {
@@ -18,19 +18,19 @@ function createCircle(
     positions[i * 3 + 2] = 0
   }
 
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+  geometry.setAttribute('position', new BufferAttribute(positions, 3))
 
-  const material = new THREE.LineBasicMaterial({
+  const material = new LineBasicMaterial({
     color: CONFIG.lineColor,
     transparent: true,
     opacity: 0.8
   })
 
-  return new THREE.Line(geometry, material)
+  return new Line(geometry, material)
 }
 
-export function createFlowerOfLife(): THREE.Group {
-  const group = new THREE.Group()
+export function createFlowerOfLife(): Group {
+  const group = new Group()
   const positions = getFlowerPositions(CONFIG.flowerRings, CONFIG.circleRadius)
 
   for (const pos of positions) {
@@ -41,7 +41,7 @@ export function createFlowerOfLife(): THREE.Group {
   return group
 }
 
-export function animateFlowerOfLife(group: THREE.Group, time: number): void {
+export function animateFlowerOfLife(group: Group, time: number): void {
   const pulseScale = 1 + Math.sin(time * CONFIG.pulseSpeed) * CONFIG.pulseAmount
   group.scale.set(pulseScale, pulseScale, 1)
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import * as THREE from 'three'
+import { Group, Line } from 'three'
 
 // Mock the DOM for Three.js
 beforeEach(() => {
@@ -18,7 +18,7 @@ describe('createFlowerOfLife', () => {
   it('creates a THREE.Group', async () => {
     const { createFlowerOfLife } = await import('../../src/patterns/flower-of-life')
     const group = createFlowerOfLife()
-    expect(group).toBeInstanceOf(THREE.Group)
+    expect(group).toBeInstanceOf(Group)
   })
 
   it('creates correct number of circles based on config', async () => {
@@ -36,7 +36,7 @@ describe('createFlowerOfLife', () => {
     const group = createFlowerOfLife()
 
     for (const child of group.children) {
-      expect(child).toBeInstanceOf(THREE.Line)
+      expect(child).toBeInstanceOf(Line)
     }
   })
 })

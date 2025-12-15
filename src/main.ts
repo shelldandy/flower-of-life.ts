@@ -1,7 +1,7 @@
-import './style.css'
-import * as THREE from 'three'
-import { scene, camera, renderer, controls, setupResizeHandler } from './scene'
-import { PATTERNS, SPHERE_STYLES, type SphereStyle } from './config'
+import "./style.css";
+import { Clock } from "three";
+import { scene, camera, renderer, controls, setupResizeHandler } from "./scene";
+import { PATTERNS, SPHERE_STYLES, type SphereStyle } from "./config";
 import {
   createFlowerOfLife,
   animateFlowerOfLife,
@@ -9,61 +9,68 @@ import {
   animateHarmonicWaves,
   createSpheres3D,
   animateSpheres3D,
-  type WaveData
-} from './patterns'
-import { switchPattern, setupKeyboardControls, type AppState, type PatternGroups } from './controls'
+  type WaveData,
+} from "./patterns";
+import {
+  switchPattern,
+  setupKeyboardControls,
+  type AppState,
+  type PatternGroups,
+} from "./controls";
 
 // Application state
 const state: AppState = {
   currentPattern: PATTERNS.FLOWER,
-  currentSphereStyleIndex: 0
-}
+  currentSphereStyleIndex: 0,
+};
 
 // Create pattern groups
-const flowerGroup = createFlowerOfLife()
-const { group: wavesGroup, waves } = createHarmonicWaves()
-const spheresGroup = createSpheres3D(SPHERE_STYLES[state.currentSphereStyleIndex] as SphereStyle)
+const flowerGroup = createFlowerOfLife();
+const { group: wavesGroup, waves } = createHarmonicWaves();
+const spheresGroup = createSpheres3D(
+  SPHERE_STYLES[state.currentSphereStyleIndex] as SphereStyle,
+);
 
 // Add groups to scene
-scene.add(flowerGroup)
-scene.add(wavesGroup)
-scene.add(spheresGroup)
+scene.add(flowerGroup);
+scene.add(wavesGroup);
+scene.add(spheresGroup);
 
 const groups: PatternGroups = {
   flowerGroup,
   wavesGroup,
-  spheresGroup
-}
+  spheresGroup,
+};
 
 // Setup controls
-setupResizeHandler()
-setupKeyboardControls(state, groups, camera, controls)
+setupResizeHandler();
+setupKeyboardControls(state, groups, camera, controls);
 
 // Initialize to first pattern
-switchPattern(PATTERNS.FLOWER, state, groups, camera, controls)
+switchPattern(PATTERNS.FLOWER, state, groups, camera, controls);
 
 // Animation loop
-const clock = new THREE.Clock()
+const clock = new Clock();
 
 function animate(): void {
-  requestAnimationFrame(animate)
+  requestAnimationFrame(animate);
 
-  const time = clock.getElapsedTime()
+  const time = clock.getElapsedTime();
 
   if (state.currentPattern === PATTERNS.FLOWER) {
-    animateFlowerOfLife(flowerGroup, time)
+    animateFlowerOfLife(flowerGroup, time);
   }
 
   if (state.currentPattern === PATTERNS.WAVES) {
-    animateHarmonicWaves(waves as WaveData[], time)
+    animateHarmonicWaves(waves as WaveData[], time);
   }
 
   if (state.currentPattern === PATTERNS.SPHERES) {
-    animateSpheres3D(spheresGroup, time)
+    animateSpheres3D(spheresGroup, time);
   }
 
-  controls.update()
-  renderer.render(scene, camera)
+  controls.update();
+  renderer.render(scene, camera);
 }
 
-animate()
+animate();
