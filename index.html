@@ -40,7 +40,7 @@
 </head>
 <body>
     <div id="mode">Flower of Life</div>
-    <div id="info">Drag to rotate • Scroll to zoom<br>Press Space or T to toggle pattern</div>
+    <div id="info">Drag to rotate • Scroll to zoom<br>Space/T: toggle pattern • S: sphere style</div>
 
     <script type="importmap">
     {
@@ -74,15 +74,28 @@
             waveWidth: 10,
             verticalSpacing: 0.6,
             baseAmplitude: 1.0,
-            waveAnimationSpeed: 0.3
+            waveAnimationSpeed: 0.3,
+
+            // 3D Flower of Life (Spheres)
+            sphere3dRings: 2,
+            sphereRadius: 0.8,
+            sphereSegments: 32,
+            sphereLayers: 3,
+            layerSpacing: 1.4,
+            sphere3dRotationSpeed: 0.3
         };
 
         // Pattern state
         const PATTERNS = {
             FLOWER: 'flower',
-            WAVES: 'waves'
+            WAVES: 'waves',
+            SPHERES: 'spheres'
         };
         let currentPattern = PATTERNS.FLOWER;
+
+        // Sphere style state
+        const SPHERE_STYLES = ['solid', 'wireframe', 'glass'];
+        let currentSphereStyle = 0;
 
         // Scene setup
         const scene = new THREE.Scene();
@@ -110,8 +123,22 @@
         // Groups for each pattern
         const flowerGroup = new THREE.Group();
         const wavesGroup = new THREE.Group();
+        const spheresGroup = new THREE.Group();
         scene.add(flowerGroup);
         scene.add(wavesGroup);
+        scene.add(spheresGroup);
+
+        // Lighting for 3D spheres
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(5, 10, 7);
+        scene.add(directionalLight);
+
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+        fillLight.position.set(-5, -5, -5);
+        scene.add(fillLight);
 
         // =====================
         // FLOWER OF LIFE
@@ -244,6 +271,97 @@
         }
 
         // =====================
+        // 3D FLOWER OF LIFE (SPHERES)
+        // =====================
+
+        // Generate 3D hexagonal close-packed positions
+        function get3DFlowerPositions(rings, spacing, layers, layerSpacing) {
+            const positions = [];
+
+            for (let layer = 0; layer < layers; layer++) {
+                const zOffset = layer * layerSpacing;
+                // Alternate layers are offset for close-packing
+                const layerPositions = getFlowerPositions(rings, spacing);
+
+                for (const pos of layerPositions) {
+                    positions.push({
+                        x: pos.x + (layer % 2 === 1 ? spacing * 0.5 : 0),
+                        y: pos.y + (layer % 2 === 1 ? spacing * Math.sqrt(3) / 6 : 0),
+                        z: zOffset
+                    });
+                }
+            }
+
+            // Center vertically
+            const centerZ = (layers - 1) * layerSpacing / 2;
+            return positions.map(p => ({ ...p, z: p.z - centerZ }));
+        }
+
+        // Create a sphere with the specified style
+        function createSphere(x, y, z, radius, style) {
+            const geometry = new THREE.SphereGeometry(radius, CONFIG.sphereSegments, CONFIG.sphereSegments);
+            let material;
+
+            switch (style) {
+                case 'wireframe':
+                    material = new THREE.MeshBasicMaterial({
+                        color: CONFIG.lineColor,
+                        wireframe: true,
+                        transparent: true,
+                        opacity: 0.6
+                    });
+                    break;
+                case 'glass':
+                    material = new THREE.MeshPhysicalMaterial({
+                        color: CONFIG.lineColor,
+                        transparent: true,
+                        opacity: 0.3,
+                        roughness: 0.1,
+                        metalness: 0.1,
+                        transmission: 0.9,
+                        thickness: 0.5
+                    });
+                    break;
+                case 'solid':
+                default:
+                    material = new THREE.MeshStandardMaterial({
+                        color: CONFIG.lineColor,
+                        roughness: 0.4,
+                        metalness: 0.2
+                    });
+            }
+
+            const sphere = new THREE.Mesh(geometry, material);
+            sphere.position.set(x, y, z);
+            return sphere;
+        }
+
+        // Build the 3D Flower of Life with spheres
+        function build3DFlowerOfLife(style) {
+            // Clear existing spheres
+            while (spheresGroup.children.length > 0) {
+                const child = spheresGroup.children[0];
+                child.geometry.dispose();
+                child.material.dispose();
+                spheresGroup.remove(child);
+            }
+
+            const positions = get3DFlowerPositions(
+                CONFIG.sphere3dRings,
+                CONFIG.sphereRadius * 2,
+                CONFIG.sphereLayers,
+                CONFIG.layerSpacing
+            );
+
+            for (const pos of positions) {
+                const sphere = createSphere(pos.x, pos.y, pos.z, CONFIG.sphereRadius, style);
+                spheresGroup.add(sphere);
+            }
+        }
+
+        build3DFlowerOfLife(SPHERE_STYLES[currentSphereStyle]);
+
+        // =====================
         // PATTERN SWITCHING
         // =====================
 
@@ -251,9 +369,12 @@
             if (pattern === PATTERNS.FLOWER) {
                 camera.position.set(0, 0, 12);
                 controls.target.set(0, 0, 0);
-            } else {
+            } else if (pattern === PATTERNS.WAVES) {
                 camera.position.set(8, 6, 12);
                 controls.target.set(0, CONFIG.numHarmonics * CONFIG.verticalSpacing / 2, 0);
+            } else if (pattern === PATTERNS.SPHERES) {
+                camera.position.set(8, 6, 10);
+                controls.target.set(0, 0, 0);
             }
             controls.update();
         }
@@ -262,9 +383,14 @@
             currentPattern = pattern;
             flowerGroup.visible = (pattern === PATTERNS.FLOWER);
             wavesGroup.visible = (pattern === PATTERNS.WAVES);
+            spheresGroup.visible = (pattern === PATTERNS.SPHERES);
 
-            document.getElementById('mode').textContent =
-                pattern === PATTERNS.FLOWER ? 'Flower of Life' : 'Harmonic Waves';
+            const modeNames = {
+                [PATTERNS.FLOWER]: 'Flower of Life',
+                [PATTERNS.WAVES]: 'Harmonic Waves',
+                [PATTERNS.SPHERES]: `3D Flower (${SPHERE_STYLES[currentSphereStyle]})`
+            };
+            document.getElementById('mode').textContent = modeNames[pattern];
 
             setCamera(pattern);
         }
@@ -276,10 +402,20 @@
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space' || e.code === 'KeyT') {
                 e.preventDefault();
-                const newPattern = currentPattern === PATTERNS.FLOWER
-                    ? PATTERNS.WAVES
-                    : PATTERNS.FLOWER;
+                // Cycle: FLOWER -> WAVES -> SPHERES -> FLOWER
+                const patterns = [PATTERNS.FLOWER, PATTERNS.WAVES, PATTERNS.SPHERES];
+                const currentIndex = patterns.indexOf(currentPattern);
+                const newPattern = patterns[(currentIndex + 1) % patterns.length];
                 switchPattern(newPattern);
+            }
+
+            // 'S' to cycle sphere styles when in spheres mode
+            if (e.code === 'KeyS' && currentPattern === PATTERNS.SPHERES) {
+                e.preventDefault();
+                currentSphereStyle = (currentSphereStyle + 1) % SPHERE_STYLES.length;
+                build3DFlowerOfLife(SPHERE_STYLES[currentSphereStyle]);
+                document.getElementById('mode').textContent =
+                    `3D Flower (${SPHERE_STYLES[currentSphereStyle]})`;
             }
         });
 
@@ -316,6 +452,11 @@
                     updateWaveGeometry(wave.positions, wave.harmonic, time);
                     wave.geometry.attributes.position.needsUpdate = true;
                 }
+            }
+
+            // Animate 3D Spheres - slow rotation
+            if (currentPattern === PATTERNS.SPHERES) {
+                spheresGroup.rotation.y = time * CONFIG.sphere3dRotationSpeed * 0.5;
             }
 
             controls.update();
