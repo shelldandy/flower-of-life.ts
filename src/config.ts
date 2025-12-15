@@ -20,7 +20,7 @@ export const CONFIG = {
 
   // Flower of Life v2
   flowerV2DrawDuration: 1,
-  flowerV2PauseDuration: 3,
+  flowerV2PauseDuration: 5,
 
   // 3D Flower of Life (Spheres)
   sphere3dRings: 2,
@@ -28,20 +28,20 @@ export const CONFIG = {
   sphereSegments: 32,
   sphereLayers: 3,
   layerSpacing: 1.4,
-  sphere3dRotationSpeed: 0.3
-} as const
+  sphere3dRotationSpeed: 0.3,
+} as const;
 
-export type Config = typeof CONFIG
+export type Config = typeof CONFIG;
 
 export const PATTERNS = {
-  FLOWER: 'flower',
-  FLOWER_V2: 'flower-v2',
-  WAVES: 'waves',
-  SPHERES: 'spheres'
-} as const
+  FLOWER: "flower",
+  FLOWER_V2: "flower-v2",
+  WAVES: "waves",
+  SPHERES: "spheres",
+} as const;
 
-export type Pattern = (typeof PATTERNS)[keyof typeof PATTERNS]
+export type Pattern = (typeof PATTERNS)[keyof typeof PATTERNS];
 
-export const SPHERE_STYLES = ['solid', 'wireframe', 'glass'] as const
+export const SPHERE_STYLES = ["solid", "wireframe", "glass"] as const;
 
-export type SphereStyle = (typeof SPHERE_STYLES)[number]
+export type SphereStyle = (typeof SPHERE_STYLES)[number];

@@ -6,6 +6,7 @@ import { rebuildSpheres3D } from './patterns'
 export interface AppState {
   currentPattern: Pattern
   currentSphereStyleIndex: number
+  isPaused: boolean
 }
 
 export interface PatternGroups {
@@ -87,5 +88,29 @@ export function setupKeyboardControls(
       rebuildSpheres3D(groups.spheresGroup, newStyle)
       updateModeDisplay(PATTERNS.SPHERES, newStyle)
     }
+
+    if (e.code === 'KeyP') {
+      e.preventDefault()
+      togglePause(state)
+    }
   })
+}
+
+export function togglePause(state: AppState): void {
+  state.isPaused = !state.isPaused
+  updatePauseButton(state.isPaused)
+}
+
+export function updatePauseButton(isPaused: boolean): void {
+  const pauseButton = document.getElementById('pause-button')
+  if (pauseButton) {
+    pauseButton.textContent = isPaused ? 'Play' : 'Pause'
+  }
+}
+
+export function setupPauseButton(state: AppState): void {
+  const pauseButton = document.getElementById('pause-button')
+  if (pauseButton) {
+    pauseButton.addEventListener('click', () => togglePause(state))
+  }
 }
