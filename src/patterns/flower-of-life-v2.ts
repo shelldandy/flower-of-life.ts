@@ -1,6 +1,35 @@
 import { BufferGeometry, BufferAttribute, LineBasicMaterial, Line, Group } from 'three'
 import { CONFIG } from '../config'
 
+// The Seven Movements of creation - timing thresholds calculated once
+let seedTimings: { start: number; end: number }[] = []
+let seedTotalDuration = 0
+let totalCycleDuration = 0
+
+function calculateTimings(numCircles: number): void {
+  const durations = CONFIG.flowerV2StageDurations
+  const pauses = CONFIG.flowerV2StagePauses
+
+  seedTimings = []
+  let currentTime = 0
+
+  // First 7 circles: Seed of Life with staged timing
+  for (let i = 0; i < 7; i++) {
+    const start = currentTime
+    const end = start + (durations[i] ?? 0.5)
+    seedTimings.push({ start, end })
+    currentTime = end + (pauses[i] ?? 0.2)
+  }
+
+  seedTotalDuration = currentTime
+
+  // Outer circles draw after the Seed
+  const outerCircles = numCircles - 7
+  const outerDuration = outerCircles * CONFIG.flowerV2OuterDrawDuration
+
+  totalCycleDuration = seedTotalDuration + outerDuration + CONFIG.flowerV2FinalPause
+}
+
 function createCircle(
   centerX: number,
   centerY: number,
@@ -109,29 +138,50 @@ export function createFlowerOfLifeV2(): Group {
 
 export function animateFlowerOfLifeV2(group: Group, time: number): void {
   const segments = CONFIG.circleSegments
-  const drawDuration = CONFIG.flowerV2DrawDuration
-  const pauseDuration = CONFIG.flowerV2PauseDuration
   const numCircles = group.children.length
 
-  // Total cycle: draw all circles + pause (only at end)
-  const totalCycle = drawDuration * numCircles + pauseDuration
-  const cycleTime = time % totalCycle
+  // Calculate timings once (or when circle count changes)
+  if (seedTimings.length === 0 || totalCycleDuration === 0) {
+    calculateTimings(numCircles)
+  }
+
+  const cycleTime = time % totalCycleDuration
 
   // Animate each circle
   for (let i = 0; i < numCircles; i++) {
     const circle = group.children[i] as Line
     const geometry = circle.geometry as BufferGeometry
-    const circleStartTime = drawDuration * i
-    const circleEndTime = drawDuration * (i + 1)
 
     let progress: number
-    if (cycleTime < circleStartTime) {
-      progress = 0
-    } else if (cycleTime < circleEndTime) {
-      progress = (cycleTime - circleStartTime) / drawDuration
+
+    if (i < 7) {
+      // Seed of Life: staged timing with pauses
+      const timing = seedTimings[i]!
+      const { start, end } = timing
+      const duration = end - start
+
+      if (cycleTime < start) {
+        progress = 0
+      } else if (cycleTime < end) {
+        progress = (cycleTime - start) / duration
+      } else {
+        progress = 1
+      }
     } else {
-      progress = 1
+      // Outer rings: uniform fast timing after Seed completes
+      const outerIndex = i - 7
+      const outerStart = seedTotalDuration + outerIndex * CONFIG.flowerV2OuterDrawDuration
+      const outerEnd = outerStart + CONFIG.flowerV2OuterDrawDuration
+
+      if (cycleTime < outerStart) {
+        progress = 0
+      } else if (cycleTime < outerEnd) {
+        progress = (cycleTime - outerStart) / CONFIG.flowerV2OuterDrawDuration
+      } else {
+        progress = 1
+      }
     }
+
     geometry.setDrawRange(0, Math.floor(progress * (segments + 1)))
   }
 }

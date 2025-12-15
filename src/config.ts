@@ -18,10 +18,28 @@ export const CONFIG = {
   baseAmplitude: 1.0,
   waveAnimationSpeed: 0.3,
 
-  // Flower of Life v2
+  // Flower of Life v2 - Seven Movements
   flowerV2Rings: 3,
-  flowerV2DrawDuration: 1,
-  flowerV2PauseDuration: 5,
+  flowerV2StageDurations: [
+    1.5,   // 1. Monad - Spirit expands, infinite potential
+    1.0,   // 2. Dyad - Vesica Piscis, womb of creation
+    0.8,   // 3. Triad - Triangle, mind/body/spirit
+    0.6,   // 4. Tetrad - Four elements, matter
+    0.6,   // 5. Pentad - Life begins
+    0.6,   // 6. Hexad - Space/time crystallize
+    1.2,   // 7. Heptad - Return to Source
+  ],
+  flowerV2StagePauses: [
+    0.8,   // Pause after Monad
+    0.5,   // Pause after Dyad
+    0.3,   // Pause after Triad
+    0.2,   // Pause after Tetrad
+    0.2,   // Pause after Pentad
+    0.2,   // Pause after Hexad
+    1.2,   // Pause after Seed of Life completes
+  ],
+  flowerV2OuterDrawDuration: 0.2,
+  flowerV2FinalPause: 2,
   flowerV2HoverColor: 0xffaa00,
 
   // 3D Flower of Life (Spheres)
