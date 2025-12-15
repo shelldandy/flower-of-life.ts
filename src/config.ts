@@ -19,6 +19,7 @@ export const CONFIG = {
   waveAnimationSpeed: 0.3,
 
   // Flower of Life v2
+  flowerV2Rings: 3,
   flowerV2DrawDuration: 1,
   flowerV2PauseDuration: 5,
 

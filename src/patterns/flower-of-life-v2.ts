@@ -35,8 +35,7 @@ function positionKey(x: number, y: number): string {
   return `${Math.round(x * precision)},${Math.round(y * precision)}`
 }
 
-function addSurroundingCircles(
-  group: Group,
+function findSurroundingCirclePositions(
   centerX: number,
   centerY: number,
   radius: number,
@@ -44,7 +43,7 @@ function addSurroundingCircles(
 ): { x: number; y: number }[] {
   const newCircles: { x: number; y: number }[] = []
 
-  // Add 6 circles around the center point at 60° intervals
+  // Find 6 circle positions around the center point at 60° intervals
   for (let i = 0; i < 6; i++) {
     const angle = (i * Math.PI) / 3 // 0, 60°, 120°, 180°, 240°, 300°
     const circleCenterX = centerX + radius * Math.cos(angle)
@@ -56,16 +55,20 @@ function addSurroundingCircles(
     }
     existingPositions.add(key)
 
-    // Start angle: each circle starts from where it intersects the previous circle
-    // The intersection with the previous circle is at angle + 120°
-    const startAngle = angle + (2 * Math.PI) / 3
-
-    const circle = createCircle(circleCenterX, circleCenterY, radius, CONFIG.circleSegments, startAngle)
-    group.add(circle)
     newCircles.push({ x: circleCenterX, y: circleCenterY })
   }
 
   return newCircles
+}
+
+function addCircleAtPosition(group: Group, x: number, y: number, radius: number): void {
+  // Start angle: circle starts from the point closest to origin
+  // This makes circles draw "outward" from the center of the pattern
+  const angleFromOrigin = Math.atan2(y, x)
+  const startAngle = angleFromOrigin + Math.PI // Start from the side facing the origin
+
+  const circle = createCircle(x, y, radius, CONFIG.circleSegments, startAngle)
+  group.add(circle)
 }
 
 export function createFlowerOfLifeV2(): Group {
@@ -78,12 +81,27 @@ export function createFlowerOfLifeV2(): Group {
   group.add(circle1)
   existingPositions.add(positionKey(0, 0))
 
-  // First ring: 6 circles around the center
-  const firstRing = addSurroundingCircles(group, 0, 0, radius, existingPositions)
+  // Start with center as the only "previous ring"
+  let previousRing = [{ x: 0, y: 0 }]
 
-  // Second ring: add circles around each circle in the first ring
-  for (const pos of firstRing) {
-    addSurroundingCircles(group, pos.x, pos.y, radius, existingPositions)
+  // Add rings iteratively
+  for (let ring = 0; ring < CONFIG.flowerV2Rings; ring++) {
+    // Collect all new circle positions for this ring
+    const newRing: { x: number; y: number }[] = []
+    for (const pos of previousRing) {
+      const added = findSurroundingCirclePositions(pos.x, pos.y, radius, existingPositions)
+      newRing.push(...added)
+    }
+
+    // Sort by angle from origin so circles draw in consistent counter-clockwise order
+    newRing.sort((a, b) => Math.atan2(a.y, a.x) - Math.atan2(b.y, b.x))
+
+    // Add circles in sorted order
+    for (const pos of newRing) {
+      addCircleAtPosition(group, pos.x, pos.y, radius)
+    }
+
+    previousRing = newRing
   }
 
   return group
