@@ -1,4 +1,5 @@
 export { createFlowerOfLife, animateFlowerOfLife } from './flower-of-life'
+export { createFlowerOfLifeV2, animateFlowerOfLifeV2 } from './flower-of-life-v2'
 export {
   createHarmonicWaves,
   animateHarmonicWaves,

@@ -5,6 +5,8 @@ import { PATTERNS, SPHERE_STYLES, type SphereStyle } from "./config";
 import {
   createFlowerOfLife,
   animateFlowerOfLife,
+  createFlowerOfLifeV2,
+  animateFlowerOfLifeV2,
   createHarmonicWaves,
   animateHarmonicWaves,
   createSpheres3D,
@@ -20,12 +22,13 @@ import {
 
 // Application state
 const state: AppState = {
-  currentPattern: PATTERNS.FLOWER,
+  currentPattern: PATTERNS.FLOWER_V2,
   currentSphereStyleIndex: 0,
 };
 
 // Create pattern groups
 const flowerGroup = createFlowerOfLife();
+const flowerV2Group = createFlowerOfLifeV2();
 const { group: wavesGroup, waves } = createHarmonicWaves();
 const spheresGroup = createSpheres3D(
   SPHERE_STYLES[state.currentSphereStyleIndex] as SphereStyle,
@@ -33,11 +36,13 @@ const spheresGroup = createSpheres3D(
 
 // Add groups to scene
 scene.add(flowerGroup);
+scene.add(flowerV2Group);
 scene.add(wavesGroup);
 scene.add(spheresGroup);
 
 const groups: PatternGroups = {
   flowerGroup,
+  flowerV2Group,
   wavesGroup,
   spheresGroup,
 };
@@ -47,7 +52,7 @@ setupResizeHandler();
 setupKeyboardControls(state, groups, camera, controls);
 
 // Initialize to first pattern
-switchPattern(PATTERNS.FLOWER, state, groups, camera, controls);
+switchPattern(PATTERNS.FLOWER_V2, state, groups, camera, controls);
 
 // Animation loop
 const clock = new Clock();
@@ -59,6 +64,10 @@ function animate(): void {
 
   if (state.currentPattern === PATTERNS.FLOWER) {
     animateFlowerOfLife(flowerGroup, time);
+  }
+
+  if (state.currentPattern === PATTERNS.FLOWER_V2) {
+    animateFlowerOfLifeV2(flowerV2Group, time);
   }
 
   if (state.currentPattern === PATTERNS.WAVES) {

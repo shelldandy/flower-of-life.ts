@@ -18,6 +18,10 @@ export const CONFIG = {
   baseAmplitude: 1.0,
   waveAnimationSpeed: 0.3,
 
+  // Flower of Life v2
+  flowerV2DrawDuration: 1,
+  flowerV2PauseDuration: 3,
+
   // 3D Flower of Life (Spheres)
   sphere3dRings: 2,
   sphereRadius: 0.8,
@@ -31,6 +35,7 @@ export type Config = typeof CONFIG
 
 export const PATTERNS = {
   FLOWER: 'flower',
+  FLOWER_V2: 'flower-v2',
   WAVES: 'waves',
   SPHERES: 'spheres'
 } as const

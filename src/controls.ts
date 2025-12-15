@@ -10,6 +10,7 @@ export interface AppState {
 
 export interface PatternGroups {
   flowerGroup: THREE.Group
+  flowerV2Group: THREE.Group
   wavesGroup: THREE.Group
   spheresGroup: THREE.Group
 }
@@ -19,7 +20,7 @@ function setCamera(
   camera: THREE.PerspectiveCamera,
   controls: OrbitControls
 ): void {
-  if (pattern === PATTERNS.FLOWER) {
+  if (pattern === PATTERNS.FLOWER || pattern === PATTERNS.FLOWER_V2) {
     camera.position.set(0, 0, 12)
     controls.target.set(0, 0, 0)
   } else if (pattern === PATTERNS.WAVES) {
@@ -35,6 +36,7 @@ function setCamera(
 function updateModeDisplay(pattern: Pattern, sphereStyle: SphereStyle): void {
   const modeNames: Record<Pattern, string> = {
     [PATTERNS.FLOWER]: 'Flower of Life',
+    [PATTERNS.FLOWER_V2]: 'Flower of Life v2',
     [PATTERNS.WAVES]: 'Harmonic Waves',
     [PATTERNS.SPHERES]: `3D Flower (${sphereStyle})`
   }
@@ -53,6 +55,7 @@ export function switchPattern(
 ): void {
   state.currentPattern = pattern
   groups.flowerGroup.visible = pattern === PATTERNS.FLOWER
+  groups.flowerV2Group.visible = pattern === PATTERNS.FLOWER_V2
   groups.wavesGroup.visible = pattern === PATTERNS.WAVES
   groups.spheresGroup.visible = pattern === PATTERNS.SPHERES
 
@@ -69,7 +72,7 @@ export function setupKeyboardControls(
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Space' || e.code === 'KeyT') {
       e.preventDefault()
-      const patterns = [PATTERNS.FLOWER, PATTERNS.WAVES, PATTERNS.SPHERES] as const
+      const patterns = [PATTERNS.FLOWER_V2, PATTERNS.FLOWER, PATTERNS.WAVES, PATTERNS.SPHERES] as const
       const currentIndex = patterns.indexOf(state.currentPattern)
       const newPattern = patterns[(currentIndex + 1) % patterns.length]
       if (newPattern) {
